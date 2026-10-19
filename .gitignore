@@ -2,3 +2,5 @@
 *.ext4
 *.img
 *.so
+
+/addon/mpc-transfer-watch

@@ -1,0 +1,13 @@
+[Unit]
+Description=MPC USB transfer drive importer
+After=data.mount sys-kernel-config.mount
+RequiresMountsFor=/data
+
+[Service]
+ExecStart=/bin/sh /usr/libexec/mpc-uac2/mpc-transfer.sh watch
+Restart=always
+RestartSec=5
+Nice=10
+
+[Install]
+WantedBy=multi-user.target

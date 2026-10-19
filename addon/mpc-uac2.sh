@@ -6,7 +6,7 @@
 # re-based on the gadget the MPC 3.9.1 app itself builds in Controller mode on this unit
 # (captured 2026-10-18, see ../mpc-state/controller-mode.txt).
 #
-# Everything here lives in configfs (RAM). Nothing is written to the eMMC, nothing survives a reboot.
+# USB descriptors live in configfs. The optional transfer disk lives in /data/mpc-uac2/transfer.
 #
 # Usage:  sh mpc-uac2.sh start|stop|status|restart
 # Env:    MIDI_PORTS=0..3   USB-MIDI function ports (default 1, alongside USB audio; 0 = audio only).
@@ -23,6 +23,10 @@ G=$CFS/$NAME
 UDC_NAME=ff580000.usb           # USB-B port (dwc2 OTG). ff540000.usb is the internal host for the pads/controls.
 MIDI_PORTS=${MIDI_PORTS:-1}
 RATE=${RATE:-44100}
+DIR=$(cd "$(dirname "$0")" && pwd)
+mkdir -p /run/mpc-uac2
+exec 9>/run/mpc-uac2/gadget.lock
+flock 9
 
 say() { echo "[mpc-uac2] $*"; }
 die() { echo "[mpc-uac2] ERROR: $*" >&2; exit 1; }
@@ -114,9 +118,20 @@ start() {
         mkdir -p $M/strings/0x0409 2>/dev/null && w "$PRODUCT MIDI" $M/strings/0x0409/interface
         ln -s $M configs/config.1/ || die "link midi"
     fi
-    # Deliberately omitted vs. controller mode:
-    #  - ffs.smexstream   : Akai's controller protocol, needs the app on the other end
-    #  - mass_storage     : would export the SD card (/dev/mmcblk1) read-write while the MPC has it mounted
+    # Only our private transfer image is shared; never export the mounted SD.
+    if [ -f "$DIR/mpc-transfer.sh" ] && command -v mkfs.exfat >/dev/null; then
+        S=functions/mass_storage.transfer
+        if mkdir "$S"; then
+            echo 1 > "$S/lun.0/removable"
+            echo 0 > "$S/lun.0/ro"
+            echo 0 > "$S/lun.0/nofua"
+            ln -s "$S" configs/config.1/ || die "link transfer disk"
+            sh "$DIR/mpc-transfer.sh" attach || say "transfer disk unavailable; audio/MIDI continue"
+        else
+            say "mass storage unavailable; audio/MIDI continue"
+        fi
+    fi
+    # ffs.smexstream remains exclusive to Akai's Controller mode.
 
     w 0x10    os_desc/b_vendor_code
     w MSFT100 os_desc/qw_sign

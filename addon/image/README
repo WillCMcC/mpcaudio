@@ -17,3 +17,12 @@ If the MPC app ever crash-loops, the add-on switches itself off until the next r
 Remove completely: install the official Akai update image again.
 Files: /usr/libexec/mpc-uac2/*, /usr/lib/systemd/system/mpc-uac2d.service (+ multi-user.target.wants link),
        /usr/lib/systemd/system/acvs.service.d/50-mpc-uac2-tee.conf. Logs: /tmp/mpc-uac2d.log, /tmp/mpc-uac2-tee.log
+
+USB file transfer (add-on 1.3): MPCTransfer mounts automatically on the computer.
+Drop files/folders, then Eject in Finder. The MPC copies and verifies them into
+SD card / USB Imports / Transfer-<date>-<id>. Reconnect USB for another batch.
+Wait for the new folder before removing the SD or entering Controller mode.
+The private exFAT image uses 1 GiB in /data/mpc-uac2/transfer; the SD is never
+shared as a block device. Missing/full SD: batch retained and retried. Unplug
+without eject: reconnect, then eject. Existing files are never overwritten.
+New service: mpc-transferd.service; logs: journalctl -u mpc-transferd.
