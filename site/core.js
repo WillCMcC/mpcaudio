@@ -4,6 +4,8 @@
 export const AKAI_IMAGE = {
   name: 'MPC-3.9.1-Gen1-update.img',
   url: 'https://cdn.inmusicbrands.com/Software/MPC/MVSU391APC/MPC-3.9.1-Gen1-update.img',
+  proxyPath: '/akai/MPC-3.9.1-Gen1-update.img',   // same-origin nginx pass-through to Akai's CDN (it sends no CORS headers)
+  version: '3.9.1',
   size: 162220784,
   sha256: '4c0f7797a006313fad206f9513eca8b3823e834c9e0941a6b5f088386cb835d6',
   xzOffset: 340,          // AZ01 header length for this exact file (mpcimg2 -i: "XZ Part. offset 340")
@@ -17,6 +19,10 @@ export const ROOTFS = {
 export const PATCH_SHA256 = '93ce90f5548db0b84ca07e687f831fe79d2787c73fd4589ea0b86729223e9857';
 export const FASTBOOT_UNLOCK = 'oem inmusic-unlock-magic-7de5fbc22b8c524e';   // TheKikGen/MPC-LiveXplore usrbin/fastboot-live.sh
 export const USB_FILTER = { vendorId: 0x09e8, classCode: 0xff, subclassCode: 0x42, protocolCode: 0x03 };
+// Gen1 devices this Akai image declares itself compatible with (its AZ01 header): the USB product IDs the MPCs report
+// in Update Mode (One+ = 0x4056, observed). Anything else — e.g. Gen2 MPCs — is never flashed.
+export const GEN1_UPDATE_PIDS = [0x403a, 0x403b, 0x4046, 0x4047, 0x404b, 0x4052, 0x4056, 0x4057];
+export const USB_FILTERS = GEN1_UPDATE_PIDS.map((productId) => ({ ...USB_FILTER, productId }));
 
 const hex = (buf) => [...new Uint8Array(buf)].map((b) => b.toString(16).padStart(2, '0')).join('');
 export async function sha256(bytes) { return hex(await crypto.subtle.digest('SHA-256', bytes)); }
@@ -26,6 +32,25 @@ export async function checkAkaiImage(file) {
   if (file.size !== AKAI_IMAGE.size) throw new Error(`Not ${AKAI_IMAGE.name} (wrong size)`);
   const digest = await sha256(await file.arrayBuffer());
   if (digest !== AKAI_IMAGE.sha256) throw new Error(`Not ${AKAI_IMAGE.name} (checksum mismatch)`);
+}
+
+/** Download Akai's image (via the same-origin pass-through) with progress; returns a verified Blob. */
+export async function fetchAkaiImage(onProgress = () => {}, url = AKAI_IMAGE.proxyPath) {
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`Couldn't download the MPC firmware (${res.status})`);
+  const out = new Uint8Array(AKAI_IMAGE.size);
+  const reader = res.body.getReader();
+  let pos = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    if (pos + value.length > out.length) throw new Error('Firmware download larger than expected');
+    out.set(value, pos); pos += value.length;
+    onProgress(pos / out.length);
+  }
+  const blob = new Blob([out]);
+  await checkAkaiImage(blob);
+  return blob;
 }
 
 /** Decompress the rootfs out of the Akai image. XzReadableStream comes from xz-decompress. */

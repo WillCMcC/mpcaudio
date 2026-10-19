@@ -9,6 +9,7 @@ ol { padding-left: 1.3rem; margin: 0; }
 li { margin: 0 0 1.4rem; padding-left: .25rem; }
 li::marker { color: var(--muted); }
 a { color: inherit; }
+.note { margin: .5rem 0 0; font-size: .85rem; color: var(--muted); }
 .drop { display: block; border: 1.5px dashed var(--line); border-radius: 10px; padding: 1rem; text-align: center; cursor: pointer; color: var(--muted); }
 .drop.over { border-color: var(--fg); }
 .drop.ok { border-style: solid; border-color: var(--ok); color: var(--ok); }
