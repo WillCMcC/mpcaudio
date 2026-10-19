@@ -1,0 +1,9 @@
+{
+  "rootfsSize": 441279488,
+  "stockRootfsSha256": "6aafd4384469a76df4c4270aa4f07b3f7e411828a691c75d5471c5fdfe2d69f3",
+  "patchedRootfsSha256": "7eaba72894930a3e533b9f89736689068f1cd4cb8e30e0190215fb9d40094ae6",
+  "patchSha256": "93ce90f5548db0b84ca07e687f831fe79d2787c73fd4589ea0b86729223e9857",
+  "changedBlocks": 57,
+  "runs": 16,
+  "patchBytes": 58512
+}

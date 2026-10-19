@@ -1,0 +1,44 @@
+# mpcaudio
+
+Static web installer at **mpcaudio.boy.dev** (CapRover app `mpcaudio`): gives an Akai MPC One / One+ USB-B audio
+(UAC2) in **standalone**, so a computer/Ableton can record the MPC's main out. Built in Todoboy task 2541.
+Full device history, backups and the SSH firmware for Will's unit: `~/Desktop/MPC-SSH/NOTES.md` (on the Mac mini).
+
+## How it works
+1. User downloads Akai's official `MPC-3.9.1-Gen1-update.img` (we never host Akai firmware; Akai's CDN has no CORS,
+   so the page can't fetch it) and drops it on the page. `core.js` pins its size + SHA-256.
+2. The browser xz-decompresses the rootfs (`xz-decompress.min.js`, MIT, xz-embedded → WASM; needs CSP
+   `'wasm-unsafe-eval'`), applies `patch.bin` (57 × 1 KiB ext4 blocks = the add-on) and checks the result's SHA-256.
+3. WebUSB fastboot (`Fastboot` in `core.js`): MPC in Update Mode (= `reboot loader`) enumerates as `09e8:4056`
+   "MPC One Mk 2" (One+), fastboot 0.4 in U-Boot. Sequence: `getvar:serialno`, `getvar:max-download-size`,
+   `oem inmusic-unlock-magic-7de5fbc22b8c524e`, `download` (441,279,488 bytes raw ext4), `flash:rootfs` (~18 s, no reply
+   meanwhile), `reboot`. Only the rootfs partition is written — never U-Boot — so a failed flash is retryable.
+   Akai's own USB-stick updater writes the same raw ext4 to the same partition (verified byte-for-byte).
+4. "Restore stock" flashes Akai's unmodified rootfs the same way.
+
+The add-on (`addon/`): `mpc-uac2d` supervisor starts a configfs UAC2 gadget 30 s after the MPC app starts in standalone,
+steps aside in Controller mode; `mpc_uac2_tee.so` (LD_PRELOAD into the MPC app via an acvs.service drop-in) copies the
+main out into the gadget. Lives in the rootfs: `/usr/libexec/mpc-uac2/`, `/usr/lib/systemd/system/`. Units in the
+`/etc` overlay do NOT start at boot (etc.mount is too late) — keep boot hooks in the rootfs.
+
+## Constraints
+- No external resources; strict CSP (`script-src 'self' 'wasm-unsafe-eval'`); `Permissions-Policy: usb=(self)`.
+- WebUSB: Chrome/Edge. `requestDevice` must be the first await in the click handler (user gesture).
+- `core.js` hashes are the contract: change the add-on → rebuild `.so`, image, `patch.bin`, then update
+  `ROOTFS.patchedSha256` / `PATCH_SHA256`.
+- Never test with node-usb's WebUSB shim without overriding its 1000 ms bulk-transfer timeout (see
+  `test/flash.test.mjs`): a cancelled read during `flash:rootfs` wedges the MPC's fastboot session until a USB reset.
+
+## Commands
+```bash
+npm test                                   # pipeline check against the real Akai image (needs the file)
+node test/flash.test.mjs <rootfs.ext4>     # flash via the same Fastboot class from Node (MPC in Update Mode)
+./bin/release.sh                           # deploy (reconciler-driven via deploy.yaml — don't run by hand)
+```
+Rebuild the add-on: in a Linux VM, `arm-linux-gnueabihf-gcc -O2 -fPIC -shared -march=armv7-a -mfpu=neon-vfpv4
+-mfloat-abi=hard -o addon/tee/mpc_uac2_tee.so addon/tee/mpc_uac2_tee.c -ldl -lpthread`, then
+`addon/image/build-image.sh <stock rootfs.ext4> <stock .img> <out .img>`, extract its rootfs with `mpcimg2 -r`, and
+`tools/make-patch.py <stock rootfs> <new rootfs> site/patch.bin tools/patch-manifest.json`.
+
+## Routing
+`mpcaudio.boy.dev` via `~/brain/bin/configure-boy-dev.sh` route `mpcaudio.boy.dev|mpcaudio|<title>MPC USB Audio</title>`.

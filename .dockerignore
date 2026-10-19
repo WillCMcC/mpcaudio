@@ -1,0 +1,12 @@
+.git
+.gitignore
+node_modules
+test
+addon
+tools
+README.md
+CLAUDE.md
+deploy.yaml
+bin
+package.json
+package-lock.json

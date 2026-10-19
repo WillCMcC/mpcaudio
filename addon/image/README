@@ -1,0 +1,11 @@
+mpc-uac2 add-on (built 2026-10-18, Todoboy task 2541) on Akai MPC 3.9.1 Gen1.
+In STANDALONE mode the MPC's main stereo out appears on the computer connected to the USB-B port as
+"MPC One+ Audio" / "MPC One Audio" (USB audio class 2, 2 ch, 44.1 kHz) ~30 s after the MPC app starts.
+The MPC's own outputs keep working. Controller mode is untouched (the add-on steps aside).
+Active on MPC One+ and MPC One only (this Akai image also installs on X/Live/Key models, where the add-on stays dormant).
+Only tested on an MPC One+; the MPC One USB ID comes from PolyVector (TheKikGen/MPC-LiveXplore issue 55).
+Turn off: put an empty file named MPC-UAC2-OFF in the root of a USB stick or SD card and insert it.
+If the MPC app ever crash-loops, the add-on switches itself off until the next reboot.
+Remove completely: install the official Akai update image again.
+Files: /usr/libexec/mpc-uac2/*, /usr/lib/systemd/system/mpc-uac2d.service (+ multi-user.target.wants link),
+       /usr/lib/systemd/system/acvs.service.d/50-mpc-uac2-tee.conf. Logs: /tmp/mpc-uac2d.log, /tmp/mpc-uac2-tee.log

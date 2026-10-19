@@ -1,0 +1,12 @@
+[Unit]
+Description=MPC One/One+ USB-B audio in standalone (mpc-uac2 add-on)
+After=sys-kernel-config.mount
+
+[Service]
+ExecStart=/bin/sh /usr/libexec/mpc-uac2/mpc-uac2d.sh
+Restart=always
+RestartSec=5
+Nice=5
+
+[Install]
+WantedBy=multi-user.target

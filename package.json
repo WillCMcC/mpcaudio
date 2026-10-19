@@ -1,0 +1,13 @@
+{
+  "name": "mpcaudio",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Web installer: USB audio in standalone for MPC One / One+ (Akai 3.9.1 Gen1) via WebUSB fastboot",
+  "scripts": {
+    "test": "node test/pipeline.test.mjs \"$HOME/Desktop/MPC-SSH/stock/MPC-3.9.1-Gen1-update.img\"",
+    "flash-test": "node test/flash.test.mjs"
+  },
+  "devDependencies": {
+    "usb": "^3.2.1"
+  }
+}

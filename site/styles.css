@@ -1,0 +1,28 @@
+:root { --fg: #111; --muted: #777; --line: #ddd; --accent: #d31f26; --ok: #18794e; --bg: #fff; }
+@media (prefers-color-scheme: dark) { :root { --fg: #eee; --muted: #888; --line: #333; --bg: #111; } }
+* { box-sizing: border-box; }
+body { margin: 0; font: 16px/1.5 system-ui, -apple-system, sans-serif; color: var(--fg); background: var(--bg); }
+main { max-width: 34rem; margin: 0 auto; padding: 3.5rem 1.25rem; }
+h1 { font-size: 1.6rem; margin: 0; letter-spacing: -0.01em; }
+.sub { margin: .15rem 0 2rem; color: var(--muted); }
+ol { padding-left: 1.3rem; margin: 0; }
+li { margin: 0 0 1.4rem; padding-left: .25rem; }
+li::marker { color: var(--muted); }
+a { color: inherit; }
+.drop { display: block; border: 1.5px dashed var(--line); border-radius: 10px; padding: 1rem; text-align: center; cursor: pointer; color: var(--muted); }
+.drop.over { border-color: var(--fg); }
+.drop.ok { border-style: solid; border-color: var(--ok); color: var(--ok); }
+.drop.bad { border-style: solid; border-color: var(--accent); color: var(--accent); }
+.drop input { display: none; }
+button { font: inherit; }
+#install { background: var(--accent); color: #fff; border: 0; border-radius: 10px; padding: .7rem 1.6rem; font-weight: 600; cursor: pointer; }
+#install:disabled { opacity: .35; cursor: default; }
+.status { margin-top: .5rem; }
+.bar { height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+#bar-fill { height: 100%; width: 0; background: var(--accent); transition: width .2s; }
+.status.done #bar-fill { background: var(--ok); }
+.status.error #bar-fill { background: var(--accent); }
+#status-text { margin: .6rem 0 0; }
+footer { margin-top: 3rem; font-size: .85rem; color: var(--muted); }
+.link { background: none; border: 0; padding: 0; color: inherit; text-decoration: underline; cursor: pointer; }
+.link:disabled { text-decoration: none; cursor: default; opacity: .6; }

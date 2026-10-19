@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>MPC USB Audio</title>
+<link rel="stylesheet" href="styles.css">
+<script src="xz-decompress.min.js"></script>
+<script type="module" src="app.js"></script>
+</head>
+<body>
+<main>
+  <h1>MPC USB Audio</h1>
+  <p class="sub">MPC One / One+ · audio over USB in standalone</p>
+
+  <ol>
+    <li>
+      Download <a id="akai-link" href="#">MPC 3.9.1 firmware</a> from Akai.
+    </li>
+    <li>
+      <label class="drop" id="drop">
+        <input type="file" id="file" accept=".img">
+        <span id="file-label">Drop it here</span>
+      </label>
+    </li>
+    <li>
+      On the MPC: <b>Menu › Preferences › Info › Update › Switch to Update Mode</b>.<br>
+      Connect its USB-B port to this computer.
+    </li>
+    <li>
+      <button id="install" disabled>Install</button>
+    </li>
+  </ol>
+
+  <div id="status" class="status" hidden>
+    <div class="bar"><div id="bar-fill"></div></div>
+    <p id="status-text"></p>
+  </div>
+
+  <footer>
+    Chrome or Edge · <button id="restore" class="link" disabled>Restore stock</button>
+  </footer>
+</main>
+</body>
+</html>
