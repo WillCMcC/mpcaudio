@@ -2,8 +2,8 @@
 
 Static web installer at **mpcaudio.boy.dev** (CapRover app `mpcaudio`): gives an Akai MPC One / One+ USB-B audio
 (UAC2) in **standalone**, both ways — a computer/Ableton can record the MPC's main out, and audio the computer
-plays to the device lands on the MPC's inputs 1/2 (mixed with the physical line inputs). Built in Todoboy task 2541;
-computer→MPC direction added in task 2548.
+plays to the device lands on the MPC's inputs 1/2 (mixed with the physical line inputs) — plus one USB-MIDI port
+(notes/clock both ways, on by default). Built in Todoboy task 2541; computer→MPC audio in task 2548; USB MIDI in 2550.
 Full device history, backups and the SSH firmware for Will's unit: `~/Desktop/MPC-SSH/NOTES.md` (on the Mac mini).
 
 ## How it works (one click: put the MPC in Update Mode, plug in, Install)
@@ -37,8 +37,11 @@ steps aside in Controller mode; `mpc_uac2_tee.so` (LD_PRELOAD into the MPC app v
 main out into the gadget (MPC→computer) **and** mixes the gadget's capture (computer→MPC) into the app's own input reads,
 so the computer's audio shows on the MPC's inputs 1/2 alongside the line inputs. Both directions use one lock-free SPSC
 ring each, drained/filled by a normal-priority worker (never blocks or spins in the app's audio thread) and corrected for
-the USB↔codec clock difference by slipping one frame at a time. Lives in the rootfs: `/usr/libexec/mpc-uac2/`,
-`/usr/lib/systemd/system/`. Units in the `/etc` overlay do NOT start at boot (etc.mount is too late) — keep boot hooks in the rootfs.
+the USB↔codec clock difference by slipping one frame at a time. The gadget also carries one USB-MIDI port by default
+(`MIDI_PORTS`, add-on 1.2; env override, 0 = audio only): the MPC app hot-plugs its ALSA sequencer client to it, so notes
+and clock flow both ways with no restart (task 2541 stress test: 3 min, 0 xruns, no IRQ storm). Lives in the rootfs:
+`/usr/libexec/mpc-uac2/`, `/usr/lib/systemd/system/`. Units in the `/etc` overlay do NOT start at boot (etc.mount is too
+late) — keep boot hooks in the rootfs.
 
 ## Constraints
 - No external resources; strict CSP (`script-src 'self' 'wasm-unsafe-eval'`); `Permissions-Policy: usb=(self)`.
@@ -59,6 +62,9 @@ node test/flash.test.mjs <rootfs.ext4>     # flash via the same Fastboot class f
 ```
 Test helpers (run on the MPC from /run): `addon/tee/uac2_rec.c` (capture levels, computer → MPC direction),
 `~/Desktop/MPC-SSH/gadget/tee/uac2_tone.c` (test tone into the gadget).
+Verify USB MIDI (add-on ≥ 1.2, one port by default): on the MPC, `/proc/asound/seq/clients` shows the app's `MPC`
+client connected both ways to the gadget's `f_midi` client; `addon/tee/seq_send.c` (ALSA seq, same route as the app)
+drives MPC→Mac; `test/mac/midi.swift` is the Mac CoreMIDI sender/listener (device "MPC One+ Port 1").
 Rebuild the image: `addon/tee/mpc_uac2_tee.so` is committed (the exact verified build). In a Linux VM: stock rootfs copy →
 `addon/image/add-ssh.sh` → `addon/image/build-image.sh` (adds the add-on, repacks) → `mpcimg2 -r` →
 `tools/make-patch.py`. To rebuild the .so itself, in a Linux VM, `arm-linux-gnueabihf-gcc -O2 -fPIC -shared -march=armv7-a -mfpu=neon-vfpv4
