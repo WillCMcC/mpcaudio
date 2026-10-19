@@ -24,6 +24,13 @@ Full device history, backups and the SSH firmware for Will's unit: `~/Desktop/MP
    failed flash is retryable. Akai's own USB-stick updater writes the same raw ext4 to the same partition
    (verified byte-for-byte).
 4. "Restore stock" flashes Akai's unmodified rootfs the same way.
+5. "Download for USB stick" runs the same verified download, extraction and patch, then `usb-image.js` wraps the
+   identical patched rootfs in an Akai V2 `.img`. It preserves the official AZ01 header/device table and 16-byte EOF
+   trailer, replaces PARTL's payload size and SHA-1, and pads to the same 8-byte alignment as `mpcimg2 -m`.
+   XZ uses CRC32 and stored LZMA2 chunks (standard XZ, ~421 MiB saved file), avoiding another WASM dependency and a
+   lengthy browser compression step. Only the official ~155 MiB image crosses the network. No firmware is hosted or
+   generated on the server; the browser saves `MPC-3.9.1-Gen1-update.img` for FAT32 / USB Drive Update.
+   This path needs no WebUSB support or connected MPC. Generated images remain local; never commit or host them.
 
 The add-on (`addon/`): `mpc-uac2d` supervisor starts a configfs UAC2 gadget 30 s after the MPC app starts in standalone,
 steps aside in Controller mode; `mpc_uac2_tee.so` (LD_PRELOAD into the MPC app via an acvs.service drop-in) copies the
@@ -45,6 +52,8 @@ the USB↔codec clock difference by slipping one frame at a time. Lives in the r
 ```bash
 npm test                                   # pipeline check against the real Akai image (needs the file)
 node test/ui.test.mjs <url> [install|restore]   # full page flow with a mock WebUSB MPC (playwright)
+MPCIMG2=/path/to/mpcimg2 node test/usb-image.test.mjs <official .img> [output-dir] # native xz + mpcimg2 round-trip + cmp
+node test/download.test.mjs <official .img> <output-dir> # Playwright: actual download without WebUSB, damaged inputs, retry
 node test/flash.test.mjs <rootfs.ext4>     # flash via the same Fastboot class from Node (MPC in Update Mode)
 ./bin/release.sh                           # deploy (reconciler-driven via deploy.yaml — don't run by hand)
 ```

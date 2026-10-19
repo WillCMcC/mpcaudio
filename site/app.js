@@ -1,9 +1,11 @@
 import { AKAI_IMAGE, ROOTFS, PATCH_SHA256, USB_FILTERS, sha256, fetchAkaiImage, extractRootfs, applyPatch, Fastboot, flashRootfs } from './core.js';
+import { buildUsbImage } from './usb-image.js';
 
 const $ = (id) => document.getElementById(id);
-const installBtn = $('install'), restoreBtn = $('restore');
+const installBtn = $('install'), restoreBtn = $('restore'), downloadBtn = $('download');
 const statusBox = $('status'), barFill = $('bar-fill'), statusText = $('status-text');
 let busy = false;
+let downloadUrl;
 
 function status(text, frac = null, cls = '') {
   statusBox.hidden = false;
@@ -11,7 +13,7 @@ function status(text, frac = null, cls = '') {
   statusText.textContent = text;
   if (frac !== null) barFill.style.width = `${Math.round(frac * 100)}%`;
 }
-function lock(on) { busy = on; installBtn.disabled = on; restoreBtn.disabled = on; }
+function lock(on) { busy = on; installBtn.disabled = on; restoreBtn.disabled = on; downloadBtn.disabled = on; }
 
 async function buildRootfs(withAddon) {
   // progress budget: download 0–25 %, unpack 25–35 %, send 35–90 %, write 90–97 %
@@ -24,7 +26,7 @@ async function buildRootfs(withAddon) {
     applyPatch(rootfs, patch);
   }
   if ((await sha256(rootfs)) !== (withAddon ? ROOTFS.patchedSha256 : ROOTFS.stockSha256)) throw new Error('Build check failed — reload the page');
-  return rootfs;
+  return { rootfs, image };
 }
 
 async function run(withAddon) {
@@ -39,7 +41,7 @@ async function run(withAddon) {
   lock(true);
   const fb = new Fastboot(device);
   try {
-    const rootfs = await buildRootfs(withAddon);
+    const { rootfs } = await buildRootfs(withAddon);
     await fb.open();
     await flashRootfs(fb, rootfs, {
       onStep: (s) => {
@@ -59,5 +61,29 @@ async function run(withAddon) {
   }
 }
 
+async function download() {
+  if (busy) return;
+  lock(true);
+  try {
+    const { rootfs, image } = await buildRootfs(true);
+    status('Preparing USB update…', 0.35);
+    const file = await buildUsbImage(image, rootfs, (f) => status('Preparing USB update…', 0.35 + f * 0.6));
+    if (downloadUrl) URL.revokeObjectURL(downloadUrl);
+    downloadUrl = URL.createObjectURL(file);
+    const link = document.createElement('a');
+    link.href = downloadUrl;
+    link.download = AKAI_IMAGE.name; // Akai's normal filename, also recognized by older updaters
+    document.body.append(link);
+    link.click();
+    link.remove();
+    status('Download ready. Copy to a FAT32 stick, then USB Drive Update.', 1, 'done');
+  } catch (e) {
+    status(e.message || String(e), null, 'error');
+  } finally {
+    lock(false);
+  }
+}
+
 installBtn.addEventListener('click', () => run(true));
 restoreBtn.addEventListener('click', () => run(false));
+downloadBtn.addEventListener('click', download);
