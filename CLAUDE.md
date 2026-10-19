@@ -12,7 +12,7 @@ Full device history, backups and the SSH firmware for Will's unit: `~/Desktop/MP
    here; `core.js` pins its size + SHA-256. 3.9.1 is the latest Gen1 release (2026-10); the bootloader can't report the
    MPC software version, so the page just states that Install brings the unit to 3.9.1.
 2. The browser xz-decompresses the rootfs (`xz-decompress.min.js`, MIT, xz-embedded → WASM; needs CSP
-   `'wasm-unsafe-eval'`), applies `patch.bin` (72 × 1 KiB ext4 blocks = add-on + SSH) and checks the result's SHA-256.
+   `'wasm-unsafe-eval'`), applies `patch.bin` (78 × 1 KiB ext4 blocks = add-on + SSH) and checks the result's SHA-256.
    SSH (Will's request, 2026-10-19): root with an EMPTY password (`addon/image/add-ssh.sh`, same as TheKikGen's tkgl
    images); `authorized_keys` stays stock — never put a personal key in this public image. Anyone on the MPC's network
    can log in as root; the page says "SSH (root, no password)".
