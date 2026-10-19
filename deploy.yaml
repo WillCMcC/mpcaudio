@@ -1,9 +1,0 @@
-deployments:
-  - id: web
-    label: mpcaudio.boy.dev
-    cwd: .
-    command:
-      - ./bin/release.sh
-    app: mpcaudio
-    purgeDomains:
-      - mpcaudio.boy.dev

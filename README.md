@@ -1,14 +1,50 @@
-# MPC USB Audio
+# MPC USB Audio Firmware
 
-One-click web installer (Chrome/Edge, WebUSB): an Akai MPC One / One+ in Update Mode gets MPC 3.9.1 plus an add-on
-that makes it a two-way USB audio device while it runs in standalone — the computer records the MPC's main out, and
-audio the computer plays to it appears on the MPC's inputs 1/2 — and a USB-MIDI port, so notes and clock flow both
-ways between the MPC app and the computer. See [CLAUDE.md](CLAUDE.md) for how it works.
+Firmware source for Akai MPC One / One+: stereo USB audio in both directions and USB MIDI while running in standalone mode. Based on Akai MPC 3.9.1 Gen1, with the mpc-uac2 1.2 add-on and optional SSH.
 
-Or choose **Download for USB stick**: copy the downloaded `.img` to a FAT32 stick, then use
-Menu › Preferences › Info › Update › USB Drive Update. Both paths install the same MPC 3.9.1 + two-way USB audio +
-USB MIDI + SSH (root, no password). The browser builds the update from Akai's verified official download; we never
-host firmware.
+The computer can record the MPC’s main output and play audio into the MPC’s inputs 1/2. One USB-MIDI port carries notes and clock both ways. The add-on starts automatically after the MPC app boots and steps aside in Controller mode.
 
-Credits: USB gadget approach from PolyVector (TheKikGen/MPC-LiveXplore issue #55); image format and fastboot unlock
-from TheKikGen/MPC-LiveXplore; xz decoder: xz-decompress (MIT) / xz-embedded (public domain).
+## Source
+
+- `addon/tee/mpc_uac2_tee.c` — audio input/output bridge loaded into the MPC app.
+- `addon/mpc-uac2.sh` — USB audio/MIDI gadget configuration.
+- `addon/mpc-uac2d.sh` — standalone/Controller-mode supervisor.
+- `addon/mpc-uac2-prestart.sh` — startup cleanup and crash-loop failsafe.
+- `addon/image/` — systemd units, SSH configuration and firmware image builder.
+
+## Build firmware
+
+Build on Linux with `make`, the ARM hard-float cross-compiler (`arm-linux-gnueabihf-gcc`), `e2fsprogs`, and root access for loop mounts. Use [TheKikGen’s mpcimg2](https://github.com/TheKikGen/MPC-LiveXplore) compiled with liblzma and OpenSSL at `~/work/mpcimg2`.
+
+Download Akai’s official `MPC-3.9.1-Gen1-update.img` separately. Its SHA-256 must be:
+
+```text
+4c0f7797a006313fad206f9513eca8b3823e834c9e0941a6b5f088386cb835d6
+```
+
+From this repository, using absolute paths for the images:
+
+```sh
+make
+~/work/mpcimg2 -r /path/to/MPC-3.9.1-Gen1-update.img /tmp/mpc-rootfs.ext4
+
+# Optional: enable SSH as root with an empty password.
+./addon/image/add-ssh.sh /tmp/mpc-rootfs.ext4
+
+./addon/image/build-image.sh \
+  /tmp/mpc-rootfs.ext4 \
+  /path/to/MPC-3.9.1-Gen1-update.img \
+  /tmp/MPC-3.9.1-Gen1-usbaudio-update.img
+```
+
+The builder repacks the rootfs into Akai’s V2 update format and verifies the extracted result byte-for-byte. Copy the resulting image to a FAT32 USB stick and use Menu › Preferences › Info › Update › USB Drive Update on the MPC.
+
+Akai’s firmware is not distributed here; each image is built locally from the official download. SSH is optional; enabling it lets anyone on the MPC’s network log in as root without a password.
+
+## Device support
+
+Verified on MPC One+. MPC One uses the model’s USB ID but has not been hardware-tested. Audio is stereo at 44.1 kHz; computer audio is mixed with the physical inputs. The add-on stays dormant on other Gen1 models.
+
+To disable the add-on, place an empty `MPC-UAC2-OFF` file at the root of a USB stick or SD card. To remove it, install Akai’s official firmware again.
+
+USB gadget approach inspired by PolyVector; MPC firmware image format documented by TheKikGen/MPC-LiveXplore.
