@@ -1,11 +1,15 @@
-mpc-uac2 add-on (built 2026-10-19, Todoboy task 2541 + 2548) on Akai MPC 3.9.1 Gen1.
+mpc-uac2 add-on (built 2026-10-19, Todoboy task 2541 + 2548 + 2550) on Akai MPC 3.9.1 Gen1.
 In STANDALONE mode the USB-B port carries audio both ways ~30 s after the MPC app starts, as
-"MPC One+ Audio" / "MPC One Audio" (USB audio class 2, 2 ch, 44.1 kHz):
+"MPC One+ Audio" / "MPC One Audio" (USB audio class 2, 2 ch, 44.1 kHz), plus one USB-MIDI port
+("MPC One+ Port 1" / "MPC One Port 1"):
   computer -> MPC: audio the computer plays to the device is mixed into the MPC's inputs 1/2,
                    alongside the physical line inputs (saturating add; both keep working);
-  MPC -> computer: the MPC's main stereo out is recorded by the computer.
+  MPC -> computer: the MPC's main stereo out is recorded by the computer;
+  MIDI both ways:  the MPC app's ALSA sequencer client ("MPC") is auto-connected to the gadget's
+                   f_midi port, so notes/clock flow to and from the computer (on by default; set
+                   MIDI_PORTS=0 when starting the gadget for audio only).
 The MPC's own outputs keep working. Controller mode is untouched (the add-on steps aside).
-Each direction corrects the USB/MPC clock difference by slipping one frame now and then.
+Each audio direction corrects the USB/MPC clock difference by slipping one frame now and then.
 Active on MPC One+ and MPC One only (this Akai image also installs on X/Live/Key models, where the add-on stays dormant).
 Only tested on an MPC One+; the MPC One USB ID comes from PolyVector (TheKikGen/MPC-LiveXplore issue 55).
 Turn off: put an empty file named MPC-UAC2-OFF in the root of a USB stick or SD card and insert it.

@@ -9,7 +9,9 @@
 # Everything here lives in configfs (RAM). Nothing is written to the eMMC, nothing survives a reboot.
 #
 # Usage:  sh mpc-uac2.sh start|stop|status|restart
-# Env:    MIDI_PORTS=0..3   add a USB-MIDI function too (default 0 — PolyVector saw IRQ CPU storms with MIDI+audio)
+# Env:    MIDI_PORTS=0..3   USB-MIDI function ports (default 1, alongside USB audio; 0 = audio only).
+#                           PolyVector once saw IRQ CPU storms with MIDI+audio, but a 3-minute full-load test
+#                           on an MPC One+ (task 2541) showed none: 0 xruns both ways, app PID stable.
 #         RATE=44100        sample rate offered to the host (MPC app default is 44100)
 #
 # Do NOT switch the MPC into Controller mode while this gadget is up: run `stop` first.
@@ -19,7 +21,7 @@ CFS=/sys/kernel/config/usb_gadget
 NAME=mpcuac2                    # deliberately NOT "smexstream" (the app's own controller-mode gadget)
 G=$CFS/$NAME
 UDC_NAME=ff580000.usb           # USB-B port (dwc2 OTG). ff540000.usb is the internal host for the pads/controls.
-MIDI_PORTS=${MIDI_PORTS:-0}
+MIDI_PORTS=${MIDI_PORTS:-1}
 RATE=${RATE:-44100}
 
 say() { echo "[mpc-uac2] $*"; }
