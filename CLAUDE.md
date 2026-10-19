@@ -1,7 +1,9 @@
 # mpcaudio
 
 Static web installer at **mpcaudio.boy.dev** (CapRover app `mpcaudio`): gives an Akai MPC One / One+ USB-B audio
-(UAC2) in **standalone**, so a computer/Ableton can record the MPC's main out. Built in Todoboy task 2541.
+(UAC2) in **standalone**, both ways — a computer/Ableton can record the MPC's main out, and audio the computer
+plays to the device lands on the MPC's inputs 1/2 (mixed with the physical line inputs). Built in Todoboy task 2541;
+computer→MPC direction added in task 2548.
 Full device history, backups and the SSH firmware for Will's unit: `~/Desktop/MPC-SSH/NOTES.md` (on the Mac mini).
 
 ## How it works (one click: put the MPC in Update Mode, plug in, Install)
@@ -25,8 +27,11 @@ Full device history, backups and the SSH firmware for Will's unit: `~/Desktop/MP
 
 The add-on (`addon/`): `mpc-uac2d` supervisor starts a configfs UAC2 gadget 30 s after the MPC app starts in standalone,
 steps aside in Controller mode; `mpc_uac2_tee.so` (LD_PRELOAD into the MPC app via an acvs.service drop-in) copies the
-main out into the gadget. Lives in the rootfs: `/usr/libexec/mpc-uac2/`, `/usr/lib/systemd/system/`. Units in the
-`/etc` overlay do NOT start at boot (etc.mount is too late) — keep boot hooks in the rootfs.
+main out into the gadget (MPC→computer) **and** mixes the gadget's capture (computer→MPC) into the app's own input reads,
+so the computer's audio shows on the MPC's inputs 1/2 alongside the line inputs. Both directions use one lock-free SPSC
+ring each, drained/filled by a normal-priority worker (never blocks or spins in the app's audio thread) and corrected for
+the USB↔codec clock difference by slipping one frame at a time. Lives in the rootfs: `/usr/libexec/mpc-uac2/`,
+`/usr/lib/systemd/system/`. Units in the `/etc` overlay do NOT start at boot (etc.mount is too late) — keep boot hooks in the rootfs.
 
 ## Constraints
 - No external resources; strict CSP (`script-src 'self' 'wasm-unsafe-eval'`); `Permissions-Policy: usb=(self)`.

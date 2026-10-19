@@ -1,9 +1,9 @@
 {
   "rootfsSize": 441279488,
   "stockRootfsSha256": "6aafd4384469a76df4c4270aa4f07b3f7e411828a691c75d5471c5fdfe2d69f3",
-  "patchedRootfsSha256": "dc5a4dbe56c80ae56dbc4c8685793de39726ca978f50cf0d73bc9dac1f048700",
-  "patchSha256": "6206b82d51e38e9b18ab4de6812d6d7bdf6aacea8c2f0243103bad3805114e12",
-  "changedBlocks": 72,
-  "runs": 26,
-  "patchBytes": 73952
+  "patchedRootfsSha256": "455c69bf21d6224040542e5bd094cbe98cf35a25e3a3520893e8bde0ef3666a0",
+  "patchSha256": "44e53a00c3af315db83134da4b6c4ee958c008c9419d74517983e11432eff67c",
+  "changedBlocks": 78,
+  "runs": 27,
+  "patchBytes": 80104
 }
