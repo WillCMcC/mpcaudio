@@ -14,9 +14,9 @@ export const AKAI_IMAGE = {
 export const ROOTFS = {
   size: 441279488,
   stockSha256: '6aafd4384469a76df4c4270aa4f07b3f7e411828a691c75d5471c5fdfe2d69f3',
-  patchedSha256: '7eaba72894930a3e533b9f89736689068f1cd4cb8e30e0190215fb9d40094ae6',
+  patchedSha256: 'dc5a4dbe56c80ae56dbc4c8685793de39726ca978f50cf0d73bc9dac1f048700',
 };
-export const PATCH_SHA256 = '93ce90f5548db0b84ca07e687f831fe79d2787c73fd4589ea0b86729223e9857';
+export const PATCH_SHA256 = '6206b82d51e38e9b18ab4de6812d6d7bdf6aacea8c2f0243103bad3805114e12';
 export const FASTBOOT_UNLOCK = 'oem inmusic-unlock-magic-7de5fbc22b8c524e';   // TheKikGen/MPC-LiveXplore usrbin/fastboot-live.sh
 export const USB_FILTER = { vendorId: 0x09e8, classCode: 0xff, subclassCode: 0x42, protocolCode: 0x03 };
 // Gen1 devices this Akai image declares itself compatible with (its AZ01 header): the USB product IDs the MPCs report

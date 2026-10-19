@@ -2,4 +2,3 @@
 node_modules/
 *.ext4
 *.img
-addon/tee/*.so

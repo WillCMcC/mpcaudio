@@ -10,7 +10,10 @@ Full device history, backups and the SSH firmware for Will's unit: `~/Desktop/MP
    here; `core.js` pins its size + SHA-256. 3.9.1 is the latest Gen1 release (2026-10); the bootloader can't report the
    MPC software version, so the page just states that Install brings the unit to 3.9.1.
 2. The browser xz-decompresses the rootfs (`xz-decompress.min.js`, MIT, xz-embedded → WASM; needs CSP
-   `'wasm-unsafe-eval'`), applies `patch.bin` (57 × 1 KiB ext4 blocks = the add-on) and checks the result's SHA-256.
+   `'wasm-unsafe-eval'`), applies `patch.bin` (72 × 1 KiB ext4 blocks = add-on + SSH) and checks the result's SHA-256.
+   SSH (Will's request, 2026-10-19): root with an EMPTY password (`addon/image/add-ssh.sh`, same as TheKikGen's tkgl
+   images); `authorized_keys` stays stock — never put a personal key in this public image. Anyone on the MPC's network
+   can log in as root; the page says "SSH (root, no password)".
 3. WebUSB fastboot (`Fastboot` in `core.js`): MPC in Update Mode (= `reboot loader`) enumerates as `09e8:4056`
    "MPC One Mk 2" (One+), fastboot 0.4 in U-Boot. The device picker only offers the 8 Gen1 product IDs from the Akai
    image header (`GEN1_UPDATE_PIDS`), so Gen2 MPCs can't be selected. Sequence: `getvar:serialno`,
@@ -40,7 +43,11 @@ node test/ui.test.mjs <url> [install|restore]   # full page flow with a mock Web
 node test/flash.test.mjs <rootfs.ext4>     # flash via the same Fastboot class from Node (MPC in Update Mode)
 ./bin/release.sh                           # deploy (reconciler-driven via deploy.yaml — don't run by hand)
 ```
-Rebuild the add-on: in a Linux VM, `arm-linux-gnueabihf-gcc -O2 -fPIC -shared -march=armv7-a -mfpu=neon-vfpv4
+Test helpers (run on the MPC from /run): `addon/tee/uac2_rec.c` (capture levels, computer → MPC direction),
+`~/Desktop/MPC-SSH/gadget/tee/uac2_tone.c` (test tone into the gadget).
+Rebuild the image: `addon/tee/mpc_uac2_tee.so` is committed (the exact verified build). In a Linux VM: stock rootfs copy →
+`addon/image/add-ssh.sh` → `addon/image/build-image.sh` (adds the add-on, repacks) → `mpcimg2 -r` →
+`tools/make-patch.py`. To rebuild the .so itself, in a Linux VM, `arm-linux-gnueabihf-gcc -O2 -fPIC -shared -march=armv7-a -mfpu=neon-vfpv4
 -mfloat-abi=hard -o addon/tee/mpc_uac2_tee.so addon/tee/mpc_uac2_tee.c -ldl -lpthread`, then
 `addon/image/build-image.sh <stock rootfs.ext4> <stock .img> <out .img>`, extract its rootfs with `mpcimg2 -r`, and
 `tools/make-patch.py <stock rootfs> <new rootfs> site/patch.bin tools/patch-manifest.json`.
